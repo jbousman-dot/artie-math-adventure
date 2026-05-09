@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#7c3aed">
+<title>Artie's Math Adventure</title>
+<link rel="manifest" href="manifest.json">
+<style>
+/* ===== CSS RESET & VARIABLES ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --pink: #ec4899;
+  --purple: #8b5cf6;
+  --violet: #7c3aed;
+  --blue: #3b82f6;
+  --cyan: #06b6d4;
+  --green: #10b981;
+  --yellow: #f59e0b;
+  --orange: #f97316;
+  --red: #ef4444;
+  --gold: #fbbf24;
+  --bg: #fdf4ff;
+  --card: #ffffff;
+  --text: #1e1b4b;
+  --text-light: #6b7280;
+  --shadow: 0 4px 20px rgba(124, 58, 237, 0.15);
+  --radius: 16px;
+  --nav-height: 70px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* ===== SCREEN MANAGEMENT ===== */
+.screen {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  padding-bottom: calc(var(--nav-height) + 16px);
+  -webkit-overflow-scrolling: touch;
+}
+.screen.active { display: flex; flex-direction: column; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  background: white;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+  z-index: 100;
+  padding-bottom: var(--safe-bottom);
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.nav-btn.active { color: var(--violet); background: rgba(124, 58, 237, 0.08); }
+.nav-btn svg { width: 28px; height: 28px; }
+
+/* ===== COMMON ELEMENTS ===== */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.xp-bar-container {
+  background: #e5e7eb;
+  border-radius: 999px;
+  height: 12px;
+  flex: 1;
+  margin: 0 12px;
+  overflow: hidden;
+}
+.xp-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.level-badge {
+  background: linear-gradient(135deg, var(--violet), var(--purple));
+  color: white;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.coins-badge {
+  background: linear-gradient(135deg, var(--yellow), var(--orange));
+  color: white;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary { background: linear-gradient(135deg, var(--violet), var(--purple)); }
+.btn-success { background: linear-gradient(135deg, var(--green), var(--cyan)); }
+.btn-pink { background: linear-gradient(135deg, var(--pink), var(--purple)); }
+.btn-small { padding: 8px 16px; font-size: 13px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ===== HOME SCREEN ===== */
+.home-hero {
+  text-align: center;
+  padding: 20px 0;
+}
+.home-hero h1 {
+  font-size: 28px;
+  background: linear-gradient(135deg, var(--violet), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+.home-hero .subtitle {
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 14px 8px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.stat-card .value {
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--violet), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stat-card .label {
+  font-size: 11px;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.daily-challenge {
+  background: linear-gradient(135deg, var(--violet), var(--pink), var(--orange));
+  border-radius: var(--radius);
+  padding: 20px;
+  color: white;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.daily-challenge h3 { font-size: 18px; margin-bottom: 6px; }
+
+.achievement-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: white;
+  border-radius: 20px;
+  padding: 30px 40px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  z-index: 999;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.achievement-toast.show { transform: translate(-50%, -50%) scale(1); }
+.achievement-toast .icon { font-size: 60px; margin-bottom: 10px; }
+.achievement-toast h2 { color: var(--violet); font-size: 22px; }
+.achievement-toast p { color: var(--text-light); margin-top: 6px; }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 998;
+  display: none;
+}
+.overlay.show { display: block; }
+
+/* ===== MATH SCREEN ===== */
+.math-problem {
+  text-align: center;
+  padding: 20px 0;
+}
+.math-problem .problem-text {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 20px 0;
+  min-height: 70px;
+}
+.math-problem .difficulty-label {
+  font-size: 13px;
+  color: var(--text-light);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.answer-input-area {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+.answer-display {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--violet);
+  min-width: 120px;
+  text-align: center;
+  border-bottom: 4px solid var(--violet);
+  padding: 4px 16px;
+  min-height: 52px;
+}
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+.numpad-btn {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  font-size: 24px;
+  font-weight: 700;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text);
+}
+.numpad-btn:active {
+  background: var(--violet);
+  color: white;
+  border-color: var(--violet);
+  transform: scale(0.95);
+}
+.numpad-btn.submit-btn {
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  color: white;
+  border-color: var(--green);
+}
+.numpad-btn.delete-btn {
+  background: #fef2f2;
+  color: var(--red);
+  border-color: #fecaca;
+}
+.numpad-btn.negative-btn {
+  background: #f0f9ff;
+  color: var(--blue);
+  border-color: #bfdbfe;
+}
+
+.streak-display {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--orange);
+  min-height: 24px;
+  margin-bottom: 8px;
+}
+
+.feedback-flash {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 500;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.feedback-flash.correct { background: rgba(16, 185, 129, 0.2); opacity: 1; }
+.feedback-flash.wrong { background: rgba(239, 68, 68, 0.2); opacity: 1; }
+
+.math-mode-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.mode-chip {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mode-chip.active {
+  border-color: var(--violet);
+  background: rgba(124, 58, 237, 0.1);
+  color: var(--violet);
+}
+.mode-chip.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== DRESS UP SCREEN ===== */
+.dressup-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.character-stage {
+  position: relative;
+  width: 200px;
+  height: 340px;
+  margin: 0 auto;
+}
+
+.category-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+  flex-shrink: 0;
+  width: 100%;
+}
+.category-tab {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.category-tab.active {
+  border-color: var(--pink);
+  background: rgba(236, 72, 153, 0.1);
+  color: var(--pink);
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.item-cell {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  font-size: 28px;
+}
+.item-cell.selected {
+  border-color: var(--pink);
+  background: rgba(236, 72, 153, 0.08);
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
+}
+.item-cell.locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.item-cell.locked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%236b7280'%3E%3Cpath d='M10 2a4 4 0 0 0-4 4v2H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4zm-2 4a2 2 0 1 1 4 0v2H8V6z'/%3E%3C/svg%3E") no-repeat center;
+}
+.item-color {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+/* ===== NAILS SCREEN ===== */
+.nails-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.hand-display {
+  position: relative;
+  width: 280px;
+  height: 260px;
+}
+
+.nail {
+  position: absolute;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid #d1d5db;
+}
+.nail:hover { transform: scale(1.1); }
+
+.color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 320px;
+}
+.color-swatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.2s;
+}
+.color-swatch.selected { border-color: var(--text); transform: scale(1.15); }
+.color-swatch.locked {
+  opacity: 0.3;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.nail-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.nail-tool-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nail-tool-btn.active {
+  border-color: var(--pink);
+  background: rgba(236, 72, 153, 0.1);
+  color: var(--pink);
+}
+.nail-tool-btn.locked { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== REWARDS / SHOP SCREEN ===== */
+.rewards-section { margin-bottom: 20px; }
+.rewards-section h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: var(--violet);
+}
+
+.unlock-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.unlock-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.unlock-item.earned { border-left: 4px solid var(--green); }
+.unlock-item.upcoming { border-left: 4px solid #e5e7eb; opacity: 0.6; }
+.unlock-icon { font-size: 28px; width: 40px; text-align: center; }
+.unlock-info { flex: 1; }
+.unlock-info .name { font-weight: 700; font-size: 14px; }
+.unlock-info .desc { font-size: 12px; color: var(--text-light); }
+.unlock-level {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--violet);
+  padding: 4px 10px;
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: 999px;
+}
+
+/* ===== PARTICLES / CONFETTI ===== */
+.particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 600;
+  font-size: 24px;
+  animation: particleFall 1.5s ease-out forwards;
+}
+@keyframes particleFall {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translateY(200px) rotate(720deg) scale(0); }
+}
+
+.star-burst {
+  position: fixed;
+  pointer-events: none;
+  z-index: 600;
+  font-size: 32px;
+  animation: starBurst 0.8s ease-out forwards;
+}
+@keyframes starBurst {
+  0% { opacity: 1; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
+  100% { opacity: 0; transform: scale(2) rotate(360deg); }
+}
+
+/* ===== LEVEL UP MODAL ===== */
+.level-up-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  background: rgba(0,0,0,0.5);
+}
+.level-up-modal.show { display: flex; }
+.level-up-content {
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.level-up-content .big-level {
+  font-size: 64px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--violet), var(--pink), var(--orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.level-up-content h2 {
+  font-size: 24px;
+  color: var(--violet);
+  margin-bottom: 8px;
+}
+.level-up-content .unlocks-list {
+  text-align: left;
+  margin: 16px 0;
+}
+.level-up-content .unlock-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+/* ===== SETTINGS SCREEN ===== */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-weight: 600; }
+
+.toggle {
+  position: relative;
+  width: 50px;
+  height: 28px;
+  background: #d1d5db;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+}
+.toggle.on { background: var(--green); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.toggle.on::after { transform: translateX(22px); }
+
+/* glitter effect for nails */
+.glitter-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-conic-gradient(
+    rgba(255,255,255,0.4) 0% 25%,
+    transparent 0% 50%
+  ) 0 0 / 6px 6px;
+  pointer-events: none;
+  opacity: 0;
+}
+.glitter-overlay.active { opacity: 1; animation: shimmer 2s linear infinite; }
+@keyframes shimmer { 100% { background-position: 6px 6px; } }
+
+/* hearts pattern for nails */
+.pattern-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  opacity: 0;
+}
+.pattern-overlay.active { opacity: 0.7; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.bounce { animation: bounce 0.5s; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+.shake { animation: shake 0.4s; }
+
+@keyframes rainbow {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.sparkle-text {
+  animation: rainbow 3s linear infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- FEEDBACK FLASH -->
+<div class="feedback-flash" id="feedbackFlash"></div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay"></div>
+
+<!-- ACHIEVEMENT TOAST -->
+<div class="achievement-toast" id="achievementToast">
+  <div class="icon" id="achievementIcon"></div>
+  <h2 id="achievementTitle"></h2>
+  <p id="achievementDesc"></p>
+</div>
+
+<!-- LEVEL UP MODAL -->
+<div class="level-up-modal" id="levelUpModal">
+  <div class="level-up-content">
+    <div style="font-size:48px; margin-bottom:8px;">&#127775;</div>
+    <h2>Level Up!</h2>
+    <div class="big-level" id="levelUpNumber"></div>
+    <div class="unlocks-list" id="levelUpUnlocks"></div>
+    <button class="btn btn-primary" onclick="closeLevelUp()" style="margin-top:12px;">Awesome!</button>
+  </div>
+</div>
+
+<!-- ===== HOME SCREEN ===== -->
+<div class="screen active" id="screen-home">
+  <div class="header-bar">
+    <div class="level-badge" id="homeLevelBadge">Lvl 1</div>
+    <div class="xp-bar-container">
+      <div class="xp-bar" id="homeXpBar" style="width: 0%"></div>
+    </div>
+    <div class="coins-badge">&#11088; <span id="homeCoins">0</span></div>
+  </div>
+
+  <div class="home-hero">
+    <h1>Artie's Math Adventure</h1>
+    <div class="subtitle">Solve problems, earn rewards, have fun!</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="value" id="statSolved">0</div>
+      <div class="label">Solved</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statStreak">0</div>
+      <div class="label">Best Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="value" id="statAccuracy">0%</div>
+      <div class="label">Accuracy</div>
+    </div>
+  </div>
+
+  <div class="daily-challenge" id="dailyChallenge" onclick="goToMath()">
+    <h3>&#9889; Start Solving!</h3>
+    <p>Tap to begin your math adventure</p>
+  </div>
+
+  <div class="card" id="nextUnlockCard">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="font-size:32px;" id="nextUnlockIcon">&#127873;</div>
+      <div>
+        <div style="font-weight:700;font-size:14px;">Next unlock at Level <span id="nextUnlockLevel">2</span></div>
+        <div style="font-size:12px;color:var(--text-light);" id="nextUnlockName">Loading...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MATH SCREEN ===== -->
+<div class="screen" id="screen-math">
+  <div class="header-bar">
+    <div class="level-badge" id="mathLevelBadge">Lvl 1</div>
+    <div class="xp-bar-container">
+      <div class="xp-bar" id="mathXpBar" style="width: 0%"></div>
+    </div>
+    <div class="coins-badge">&#11088; <span id="mathCoins">0</span></div>
+  </div>
+
+  <div class="math-mode-selector" id="mathModes"></div>
+
+  <div class="math-problem">
+    <div class="difficulty-label" id="diffLabel">Addition</div>
+    <div class="streak-display" id="streakDisplay"></div>
+    <div class="problem-text" id="problemText">3 + 4 = ?</div>
+  </div>
+
+  <div class="answer-input-area">
+    <div class="answer-display" id="answerDisplay">&nbsp;</div>
+  </div>
+
+  <div class="numpad">
+    <button class="numpad-btn" onclick="pressNum(1)">1</button>
+    <button class="numpad-btn" onclick="pressNum(2)">2</button>
+    <button class="numpad-btn" onclick="pressNum(3)">3</button>
+    <button class="numpad-btn" onclick="pressNum(4)">4</button>
+    <button class="numpad-btn" onclick="pressNum(5)">5</button>
+    <button class="numpad-btn" onclick="pressNum(6)">6</button>
+    <button class="numpad-btn" onclick="pressNum(7)">7</button>
+    <button class="numpad-btn" onclick="pressNum(8)">8</button>
+    <button class="numpad-btn" onclick="pressNum(9)">9</button>
+    <button class="numpad-btn negative-btn" onclick="pressNeg()" id="negBtn" style="display:none;">-/+</button>
+    <button class="numpad-btn" onclick="pressNum(0)">0</button>
+    <button class="numpad-btn delete-btn" onclick="pressDelete()">&#9003;</button>
+    <button class="numpad-btn submit-btn" onclick="submitAnswer()" style="grid-column: 1 / -1;">Check Answer &#10003;</button>
+  </div>
+</div>
+
+<!-- ===== DRESS UP SCREEN ===== -->
+<div class="screen" id="screen-dressup">
+  <div class="header-bar">
+    <div style="font-weight:800;font-size:18px;color:var(--pink);">Dress Up</div>
+    <div class="coins-badge">&#11088; <span id="dressupCoins">0</span></div>
+  </div>
+
+  <div class="dressup-area">
+    <div class="character-stage" id="characterStage">
+      <svg viewBox="0 0 200 340" id="characterSvg" width="200" height="340">
+        <!-- Hair back layer -->
+        <g id="hairBack"></g>
+        <!-- Body -->
+        <ellipse cx="100" cy="310" rx="22" ry="8" fill="#e5e7eb" opacity="0.5"/>
+        <!-- Legs -->
+        <g id="legsGroup">
+          <rect x="82" y="235" width="14" height="70" rx="7" fill="#FDBCB4" id="leftLeg"/>
+          <rect x="104" y="235" width="14" height="70" rx="7" fill="#FDBCB4" id="rightLeg"/>
+        </g>
+        <!-- Shoes -->
+        <g id="shoesGroup">
+          <ellipse cx="89" cy="308" rx="14" ry="6" fill="#6b7280" id="leftShoe"/>
+          <ellipse cx="111" cy="308" rx="14" ry="6" fill="#6b7280" id="rightShoe"/>
+        </g>
+        <!-- Dress/body -->
+        <g id="dressGroup">
+          <path d="M72 155 Q100 150 128 155 L135 240 Q100 245 65 240 Z" fill="#ec4899" id="dress"/>
+        </g>
+        <!-- Arms -->
+        <g id="armsGroup">
+          <rect x="58" y="158" width="12" height="55" rx="6" fill="#FDBCB4" transform="rotate(-10 64 158)" id="leftArm"/>
+          <rect x="130" y="158" width="12" height="55" rx="6" fill="#FDBCB4" transform="rotate(10 136 158)" id="rightArm"/>
+        </g>
+        <!-- Neck -->
+        <rect x="93" y="128" width="14" height="20" rx="5" fill="#FDBCB4"/>
+        <!-- Head -->
+        <circle cx="100" cy="105" r="38" fill="#FDBCB4" id="head"/>
+        <!-- Face -->
+        <g id="faceGroup">
+          <circle cx="86" cy="100" r="4" fill="#1e1b4b"/>
+          <circle cx="114" cy="100" r="4" fill="#1e1b4b"/>
+          <circle cx="84" cy="98" r="1.5" fill="white"/>
+          <circle cx="112" cy="98" r="1.5" fill="white"/>
+          <path d="M92 115 Q100 122 108 115" stroke="#ec4899" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <circle cx="78" cy="105" r="6" fill="#FDBCB4" opacity="0.5"/>
+          <circle cx="78" cy="105" r="4" fill="#ff9999" opacity="0.3"/>
+          <circle cx="122" cy="105" r="6" fill="#FDBCB4" opacity="0.5"/>
+          <circle cx="122" cy="105" r="4" fill="#ff9999" opacity="0.3"/>
+        </g>
+        <!-- Hair front layer -->
+        <g id="hairFront">
+          <path d="M62 95 Q62 55 100 50 Q138 55 138 95 Q135 75 100 72 Q65 75 62 95Z" fill="#4a2c2a" id="hairBase"/>
+        </g>
+        <!-- Accessories layer -->
+        <g id="accessoriesGroup"></g>
+      </svg>
+    </div>
+
+    <div class="category-tabs" id="dressupTabs"></div>
+    <div class="items-grid" id="dressupItems"></div>
+  </div>
+</div>
+
+<!-- ===== NAILS SCREEN ===== -->
+<div class="screen" id="screen-nails">
+  <div class="header-bar">
+    <div style="font-weight:800;font-size:18px;color:var(--pink);">Nail Salon</div>
+    <div class="coins-badge">&#11088; <span id="nailsCoins">0</span></div>
+  </div>
+
+  <div class="nails-area">
+    <div class="hand-display" id="handDisplay">
+      <!-- SVG hand -->
+      <svg viewBox="0 0 280 260" width="280" height="260" id="handSvg">
+        <!-- Palm -->
+        <path d="M90 250 Q60 200 55 160 Q50 130 60 100 L80 100 L80 50 Q80 35 90 35 Q100 35 100 50 L100 90
+                 L110 30 Q110 15 120 15 Q130 15 130 30 L130 90
+                 L140 20 Q140 5 150 5 Q160 5 160 20 L160 90
+                 L170 35 Q170 20 180 20 Q190 20 190 35 L190 100
+                 L200 80 Q210 70 218 80 L220 100 Q225 130 220 160 Q215 200 190 250 Z"
+              fill="#FDBCB4" stroke="#e5a9a0" stroke-width="1"/>
+        <!-- Finger nails -->
+        <ellipse id="nail0" cx="90" cy="40" rx="9" ry="13" fill="#fce4ec" stroke="#e5a9a0" stroke-width="1" class="nail" onclick="paintNail(0)"/>
+        <ellipse id="nail1" cx="120" cy="22" rx="9" ry="13" fill="#fce4ec" stroke="#e5a9a0" stroke-width="1" class="nail" onclick="paintNail(1)"/>
+        <ellipse id="nail2" cx="150" cy="12" rx="9" ry="13" fill="#fce4ec" stroke="#e5a9a0" stroke-width="1" class="nail" onclick="paintNail(2)"/>
+        <ellipse id="nail3" cx="180" cy="25" rx="9" ry="13" fill="#fce4ec" stroke="#e5a9a0" stroke-width="1" class="nail" onclick="paintNail(3)"/>
+        <ellipse id="nail4" cx="213" cy="75" rx="8" ry="11" fill="#fce4ec" stroke="#e5a9a0" stroke-width="1" class="nail" onclick="paintNail(4)" transform="rotate(40 213 75)"/>
+      </svg>
+    </div>
+
+    <div style="text-align:center;font-weight:700;font-size:14px;color:var(--text-light);margin-bottom:4px;">
+      Tap a nail to paint it!
+    </div>
+
+    <div class="nail-tools" id="nailTools"></div>
+
+    <div style="font-weight:700;font-size:13px;color:var(--pink);margin-top:8px;">Colors</div>
+    <div class="color-palette" id="colorPalette"></div>
+
+    <button class="btn btn-pink btn-small" onclick="clearNails()" style="margin-top:8px;">Clear All</button>
+  </div>
+</div>
+
+<!-- ===== REWARDS SCREEN ===== -->
+<div class="screen" id="screen-rewards">
+  <div class="header-bar">
+    <div style="font-weight:800;font-size:18px;color:var(--violet);">Rewards</div>
+    <div class="level-badge" id="rewardsLevelBadge">Lvl 1</div>
+  </div>
+  <div id="rewardsList"></div>
+</div>
+
+<!-- ===== BOTTOM NAVIGATION ===== -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchScreen('home')" id="nav-home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-6 0h6"/></svg>
+    Home
+  </button>
+  <button class="nav-btn" onclick="switchScreen('math')" id="nav-math">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+    Math
+  </button>
+  <button class="nav-btn" onclick="switchScreen('dressup')" id="nav-dressup">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 014 4c0 2-2 4-4 6-2-2-4-4-4-6a4 4 0 014-4z"/><path d="M8 14l-4 8h16l-4-8"/></svg>
+    Dress Up
+  </button>
+  <button class="nav-btn" onclick="switchScreen('nails')" id="nav-nails">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-1.5 0-3 1-3 3v6c0 3 1.5 5 3 5s3-2 3-5V6c0-2-1.5-3-3-3z"/><path d="M9 20h6"/></svg>
+    Nails
+  </button>
+  <button class="nav-btn" onclick="switchScreen('rewards')" id="nav-rewards">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+    Rewards
+  </button>
+</nav>
+
+<script>
+// ===== GAME STATE =====
+const DEFAULT_STATE = {
+  level: 1,
+  xp: 0,
+  coins: 0,
+  totalSolved: 0,
+  totalAttempts: 0,
+  bestStreak: 0,
+  currentStreak: 0,
+  mathMode: 'addition',
+  unlockedModes: ['addition'],
+  // Dress up
+  skinColor: '#FDBCB4',
+  hairStyle: 'default',
+  hairColor: '#4a2c2a',
+  dressStyle: 'default',
+  dressColor: '#ec4899',
+  shoeStyle: 'default',
+  shoeColor: '#6b7280',
+  accessory: 'none',
+  // Nails
+  nailColors: ['#fce4ec','#fce4ec','#fce4ec','#fce4ec','#fce4ec'],
+  nailPattern: 'none',
+  selectedNailColor: '#ec4899',
+  nailTool: 'paint',
+  // Settings
+  soundOn: true,
+};
+
+let state = {};
+let currentAnswer = '';
+let currentProblem = null;
+
+// ===== UNLOCK DEFINITIONS =====
+const UNLOCKS = [
+  { level: 1, type: 'mode', id: 'addition', name: 'Addition', icon: '&#10133;', desc: 'Add numbers together!' },
+  { level: 2, type: 'hair', id: 'ponytail', name: 'Ponytail', icon: '&#128135;', desc: 'A cute ponytail hairstyle' },
+  { level: 2, type: 'nail_color', id: '#ec4899', name: 'Pink Polish', icon: '&#128485;', desc: 'Pretty pink nail polish' },
+  { level: 3, type: 'dress_color', id: '#8b5cf6', name: 'Purple Dress', icon: '&#128087;', desc: 'A lovely purple dress' },
+  { level: 3, type: 'nail_color', id: '#ef4444', name: 'Red Polish', icon: '&#128485;', desc: 'Bold red nail polish' },
+  { level: 4, type: 'mode', id: 'subtraction', name: 'Subtraction', icon: '&#10134;', desc: 'Subtract numbers!' },
+  { level: 4, type: 'shoe_color', id: '#ec4899', name: 'Pink Shoes', icon: '&#128096;', desc: 'Sparkly pink shoes' },
+  { level: 5, type: 'accessory', id: 'bow', name: 'Hair Bow', icon: '&#127872;', desc: 'A cute hair bow' },
+  { level: 5, type: 'nail_color', id: '#8b5cf6', name: 'Purple Polish', icon: '&#128485;', desc: 'Magical purple polish' },
+  { level: 6, type: 'hair', id: 'long', name: 'Long Hair', icon: '&#128135;', desc: 'Beautiful long hair' },
+  { level: 6, type: 'dress_color', id: '#3b82f6', name: 'Blue Dress', icon: '&#128087;', desc: 'Ocean blue dress' },
+  { level: 7, type: 'nail_color', id: '#3b82f6', name: 'Blue Polish', icon: '&#128485;', desc: 'Cool blue nail polish' },
+  { level: 7, type: 'hair_color', id: '#d97706', name: 'Golden Hair', icon: '&#127775;', desc: 'Beautiful golden hair' },
+  { level: 8, type: 'accessory', id: 'crown', name: 'Crown', icon: '&#128081;', desc: 'A royal crown!' },
+  { level: 8, type: 'dress_color', id: '#f59e0b', name: 'Gold Dress', icon: '&#128087;', desc: 'Shimmering gold dress' },
+  { level: 9, type: 'nail_pattern', id: 'glitter', name: 'Glitter Effect', icon: '&#10024;', desc: 'Add sparkle to nails!' },
+  { level: 9, type: 'shoe_color', id: '#f59e0b', name: 'Gold Shoes', icon: '&#128096;', desc: 'Golden fancy shoes' },
+  { level: 10, type: 'mode', id: 'multiplication', name: 'Multiplication', icon: '&#10006;', desc: 'Multiply numbers!' },
+  { level: 10, type: 'accessory', id: 'necklace', name: 'Necklace', icon: '&#128255;', desc: 'A sparkling necklace' },
+  { level: 11, type: 'hair', id: 'curly', name: 'Curly Hair', icon: '&#128135;', desc: 'Bouncy curly hair' },
+  { level: 11, type: 'nail_color', id: '#10b981', name: 'Green Polish', icon: '&#128485;', desc: 'Fresh green polish' },
+  { level: 12, type: 'dress_color', id: '#10b981', name: 'Green Dress', icon: '&#128087;', desc: 'Nature green dress' },
+  { level: 12, type: 'hair_color', id: '#dc2626', name: 'Red Hair', icon: '&#128293;', desc: 'Fiery red hair' },
+  { level: 13, type: 'nail_color', id: '#f97316', name: 'Orange Polish', icon: '&#128485;', desc: 'Sunset orange polish' },
+  { level: 13, type: 'shoe_color', id: '#8b5cf6', name: 'Purple Shoes', icon: '&#128096;', desc: 'Royal purple shoes' },
+  { level: 14, type: 'accessory', id: 'wings', name: 'Fairy Wings', icon: '&#129419;', desc: 'Magical fairy wings!' },
+  { level: 14, type: 'dress_color', id: '#ec4899', name: 'Hot Pink Dress', icon: '&#128087;', desc: 'Hot pink party dress' },
+  { level: 15, type: 'mode', id: 'division', name: 'Division', icon: '&#10135;', desc: 'Divide numbers!' },
+  { level: 15, type: 'nail_pattern', id: 'hearts', name: 'Heart Pattern', icon: '&#128150;', desc: 'Tiny hearts on nails!' },
+  { level: 16, type: 'hair', id: 'pigtails', name: 'Pigtails', icon: '&#128135;', desc: 'Adorable pigtails' },
+  { level: 16, type: 'nail_color', id: '#06b6d4', name: 'Cyan Polish', icon: '&#128485;', desc: 'Ocean cyan polish' },
+  { level: 17, type: 'dress_color', id: '#06b6d4', name: 'Cyan Dress', icon: '&#128087;', desc: 'Ocean wave dress' },
+  { level: 17, type: 'hair_color', id: '#7c3aed', name: 'Purple Hair', icon: '&#128156;', desc: 'Magical purple hair' },
+  { level: 18, type: 'accessory', id: 'glasses', name: 'Star Glasses', icon: '&#128083;', desc: 'Cool star sunglasses' },
+  { level: 18, type: 'shoe_color', id: '#ef4444', name: 'Red Shoes', icon: '&#128096;', desc: 'Ruby red shoes' },
+  { level: 19, type: 'nail_color', id: '#fbbf24', name: 'Gold Polish', icon: '&#128485;', desc: 'Luxurious gold polish' },
+  { level: 19, type: 'dress_color', id: '#1e1b4b', name: 'Midnight Dress', icon: '&#128087;', desc: 'Elegant midnight dress' },
+  { level: 20, type: 'mode', id: 'mixed', name: 'Mixed Mode', icon: '&#127922;', desc: 'All operations mixed!' },
+  { level: 20, type: 'accessory', id: 'wand', name: 'Magic Wand', icon: '&#129668;', desc: 'A sparkly magic wand!' },
+  { level: 20, type: 'nail_pattern', id: 'stars', name: 'Star Pattern', icon: '&#11088;', desc: 'Stars on your nails!' },
+  { level: 22, type: 'hair', id: 'buns', name: 'Double Buns', icon: '&#128135;', desc: 'Space buns hairstyle' },
+  { level: 22, type: 'hair_color', id: '#ec4899', name: 'Pink Hair', icon: '&#128149;', desc: 'Bubblegum pink hair' },
+  { level: 24, type: 'dress_color', id: '#fbbf24', name: 'Sunshine Dress', icon: '&#128087;', desc: 'Bright sunshine dress' },
+  { level: 24, type: 'nail_color', id: '#ffffff', name: 'White Polish', icon: '&#128485;', desc: 'Clean white polish' },
+  { level: 25, type: 'accessory', id: 'tiara', name: 'Tiara', icon: '&#128091;', desc: 'A princess tiara!' },
+  { level: 25, type: 'nail_pattern', id: 'rainbow', name: 'Rainbow Nails', icon: '&#127752;', desc: 'Each nail a different color!' },
+  { level: 28, type: 'hair_color', id: '#06b6d4', name: 'Turquoise Hair', icon: '&#128167;', desc: 'Mermaid turquoise hair' },
+  { level: 30, type: 'accessory', id: 'cape', name: 'Superhero Cape', icon: '&#129464;', desc: 'A flowing superhero cape!' },
+  { level: 30, type: 'dress_color', id: 'rainbow', name: 'Rainbow Dress', icon: '&#127752;', desc: 'A magical rainbow dress!' },
+];
+
+// XP needed per level (increases each level)
+function xpForLevel(lvl) { return 30 + (lvl - 1) * 15; }
+
+// ===== SAVE / LOAD =====
+function saveState() {
+  localStorage.setItem('artieMathGame', JSON.stringify(state));
+}
+
+function loadState() {
+  const saved = localStorage.getItem('artieMathGame');
+  if (saved) {
+    try {
+      state = { ...DEFAULT_STATE, ...JSON.parse(saved) };
+    } catch (e) {
+      state = { ...DEFAULT_STATE };
+    }
+  } else {
+    state = { ...DEFAULT_STATE };
+  }
+}
+
+// ===== XP & LEVELING =====
+function addXP(amount) {
+  state.xp += amount;
+  state.coins += amount;
+  let leveledUp = false;
+  let newUnlocks = [];
+
+  while (state.xp >= xpForLevel(state.level)) {
+    state.xp -= xpForLevel(state.level);
+    state.level++;
+    leveledUp = true;
+
+    // Check unlocks
+    const unlocks = UNLOCKS.filter(u => u.level === state.level);
+    unlocks.forEach(u => {
+      if (u.type === 'mode' && !state.unlockedModes.includes(u.id)) {
+        state.unlockedModes.push(u.id);
+      }
+    });
+    newUnlocks.push(...unlocks);
+  }
+
+  saveState();
+  updateAllUI();
+
+  if (leveledUp) {
+    showLevelUp(state.level, newUnlocks);
+  }
+}
+
+function isUnlocked(unlock) {
+  return state.level >= unlock.level;
+}
+
+// ===== UI UPDATES =====
+function updateAllUI() {
+  const pct = (state.xp / xpForLevel(state.level)) * 100;
+  document.querySelectorAll('.xp-bar').forEach(el => el.style.width = pct + '%');
+  document.querySelectorAll('.level-badge').forEach(el => el.textContent = 'Lvl ' + state.level);
+
+  ['homeCoins','mathCoins','dressupCoins','nailsCoins'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = state.coins;
+  });
+
+  document.getElementById('statSolved').textContent = state.totalSolved;
+  document.getElementById('statStreak').textContent = state.bestStreak;
+  const acc = state.totalAttempts > 0 ? Math.round((state.totalSolved / state.totalAttempts) * 100) : 0;
+  document.getElementById('statAccuracy').textContent = acc + '%';
+
+  // Next unlock
+  const next = UNLOCKS.find(u => u.level > state.level);
+  if (next) {
+    document.getElementById('nextUnlockCard').style.display = '';
+    document.getElementById('nextUnlockLevel').textContent = next.level;
+    document.getElementById('nextUnlockName').textContent = next.name + ' - ' + next.desc;
+    document.getElementById('nextUnlockIcon').innerHTML = next.icon;
+  } else {
+    document.getElementById('nextUnlockCard').style.display = 'none';
+  }
+
+  updateMathModes();
+}
+
+// ===== SCREEN SWITCHING =====
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+
+  if (name === 'math') initMath();
+  if (name === 'dressup') initDressUp();
+  if (name === 'nails') initNails();
+  if (name === 'rewards') initRewards();
+}
+
+function goToMath() { switchScreen('math'); }
+
+// ===== MATH SYSTEM =====
+const MODES = {
+  addition: { label: 'Addition', symbol: '+', minLevel: 1 },
+  subtraction: { label: 'Subtraction', symbol: '-', minLevel: 4 },
+  multiplication: { label: 'Multiply', symbol: '\u00d7', minLevel: 10 },
+  division: { label: 'Division', symbol: '\u00f7', minLevel: 15 },
+  mixed: { label: 'Mixed', symbol: '?', minLevel: 20 },
+};
+
+function updateMathModes() {
+  const container = document.getElementById('mathModes');
+  container.innerHTML = '';
+  Object.entries(MODES).forEach(([id, mode]) => {
+    const chip = document.createElement('button');
+    chip.className = 'mode-chip';
+    if (state.mathMode === id) chip.classList.add('active');
+    if (!state.unlockedModes.includes(id)) {
+      chip.classList.add('locked');
+      chip.textContent = mode.label + ' (Lvl ' + mode.minLevel + ')';
+    } else {
+      chip.textContent = mode.label;
+      chip.onclick = () => { state.mathMode = id; saveState(); updateMathModes(); generateProblem(); };
+    }
+    container.appendChild(chip);
+  });
+
+  // Show neg button for subtraction+
+  const negBtn = document.getElementById('negBtn');
+  negBtn.style.display = (state.level >= 4) ? '' : 'none';
+}
+
+function generateProblem() {
+  let mode = state.mathMode;
+  if (mode === 'mixed') {
+    const available = ['addition', 'subtraction', 'multiplication', 'division'];
+    mode = available[Math.floor(Math.random() * available.length)];
+  }
+
+  let a, b, answer, symbol;
+  const lvl = state.level;
+
+  switch (mode) {
+    case 'addition':
+      if (lvl <= 3) { a = rand(1, 10); b = rand(1, 10); }
+      else if (lvl <= 8) { a = rand(1, 20); b = rand(1, 20); }
+      else if (lvl <= 15) { a = rand(10, 50); b = rand(10, 50); }
+      else { a = rand(10, 100); b = rand(10, 100); }
+      answer = a + b;
+      symbol = '+';
+      break;
+    case 'subtraction':
+      if (lvl <= 6) { a = rand(2, 10); b = rand(1, a); }
+      else if (lvl <= 12) { a = rand(5, 20); b = rand(1, a); }
+      else if (lvl <= 18) { a = rand(10, 50); b = rand(1, a); }
+      else { a = rand(10, 100); b = rand(1, 99); }
+      answer = a - b;
+      symbol = '-';
+      break;
+    case 'multiplication':
+      if (lvl <= 12) { a = rand(1, 5); b = rand(1, 5); }
+      else if (lvl <= 18) { a = rand(2, 8); b = rand(2, 8); }
+      else { a = rand(2, 12); b = rand(2, 12); }
+      answer = a * b;
+      symbol = '\u00d7';
+      break;
+    case 'division':
+      if (lvl <= 18) { b = rand(1, 5); answer = rand(1, 5); }
+      else { b = rand(2, 10); answer = rand(1, 10); }
+      a = b * answer;
+      symbol = '\u00f7';
+      break;
+  }
+
+  currentProblem = { a, b, answer, symbol, mode };
+  currentAnswer = '';
+  document.getElementById('problemText').textContent = a + ' ' + symbol + ' ' + b + ' = ?';
+  document.getElementById('answerDisplay').innerHTML = '&nbsp;';
+  document.getElementById('diffLabel').textContent = MODES[state.mathMode].label +
+    (state.mathMode === 'mixed' ? ' (' + mode + ')' : '');
+}
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function pressNum(n) {
+  if (currentAnswer.length >= 5) return;
+  currentAnswer += n;
+  document.getElementById('answerDisplay').textContent = currentAnswer;
+}
+
+function pressDelete() {
+  currentAnswer = currentAnswer.slice(0, -1);
+  document.getElementById('answerDisplay').innerHTML = currentAnswer || '&nbsp;';
+}
+
+function pressNeg() {
+  if (currentAnswer.startsWith('-')) {
+    currentAnswer = currentAnswer.slice(1);
+  } else {
+    currentAnswer = '-' + currentAnswer;
+  }
+  document.getElementById('answerDisplay').textContent = currentAnswer || '\u00a0';
+}
+
+function submitAnswer() {
+  if (!currentAnswer || currentAnswer === '-' || !currentProblem) return;
+
+  const userAnswer = parseInt(currentAnswer, 10);
+  state.totalAttempts++;
+
+  if (userAnswer === currentProblem.answer) {
+    // Correct!
+    state.totalSolved++;
+    state.currentStreak++;
+    if (state.currentStreak > state.bestStreak) state.bestStreak = state.currentStreak;
+
+    // XP scales with difficulty and streak
+    let xp = 5;
+    if (currentProblem.mode === 'subtraction') xp = 7;
+    if (currentProblem.mode === 'multiplication') xp = 10;
+    if (currentProblem.mode === 'division') xp = 12;
+    if (state.currentStreak >= 10) xp = Math.floor(xp * 2);
+    else if (state.currentStreak >= 5) xp = Math.floor(xp * 1.5);
+
+    showFeedback(true);
+    spawnParticles(true);
+    addXP(xp);
+    currentProblem = null;
+  } else {
+    // Wrong
+    state.currentStreak = 0;
+    showFeedback(false);
+    currentProblem = null;
+    document.getElementById('problemText').classList.add('shake');
+    setTimeout(() => document.getElementById('problemText').classList.remove('shake'), 400);
+    saveState();
+    updateAllUI();
+  }
+
+  updateStreakDisplay();
+  setTimeout(generateProblem, 600);
+}
+
+function showFeedback(correct) {
+  const flash = document.getElementById('feedbackFlash');
+  flash.className = 'feedback-flash ' + (correct ? 'correct' : 'wrong');
+  setTimeout(() => flash.className = 'feedback-flash', 300);
+}
+
+function updateStreakDisplay() {
+  const el = document.getElementById('streakDisplay');
+  if (state.currentStreak >= 3) {
+    let fire = '';
+    if (state.currentStreak >= 10) fire = '\uD83D\uDD25\uD83D\uDD25\uD83D\uDD25';
+    else if (state.currentStreak >= 5) fire = '\uD83D\uDD25\uD83D\uDD25';
+    else fire = '\uD83D\uDD25';
+    el.textContent = fire + ' ' + state.currentStreak + ' in a row! ' + fire;
+  } else {
+    el.textContent = '';
+  }
+}
+
+function initMath() {
+  updateMathModes();
+  generateProblem();
+  updateStreakDisplay();
+}
+
+// ===== DRESS UP SYSTEM =====
+const DRESS_CATEGORIES = [
+  { id: 'hair', label: 'Hair' },
+  { id: 'hair_color', label: 'Hair Color' },
+  { id: 'dress_color', label: 'Dress' },
+  { id: 'shoe_color', label: 'Shoes' },
+  { id: 'accessory', label: 'Extras' },
+  { id: 'skin', label: 'Skin' },
+];
+
+const HAIR_STYLES = {
+  default: { name: 'Short', level: 1 },
+  ponytail: { name: 'Ponytail', level: 2 },
+  long: { name: 'Long', level: 6 },
+  curly: { name: 'Curly', level: 11 },
+  pigtails: { name: 'Pigtails', level: 16 },
+  buns: { name: 'Double Buns', level: 22 },
+};
+
+const SKIN_COLORS = [
+  { color: '#FDBCB4', name: 'Light', level: 1 },
+  { color: '#F5C5A3', name: 'Peach', level: 1 },
+  { color: '#D4A574', name: 'Tan', level: 1 },
+  { color: '#C68642', name: 'Warm', level: 1 },
+  { color: '#8D5524', name: 'Brown', level: 1 },
+  { color: '#5C3A1E', name: 'Deep', level: 1 },
+];
+
+const ACCESSORIES = {
+  none: { name: 'None', icon: '&#10060;', level: 1 },
+  bow: { name: 'Bow', icon: '&#127872;', level: 5 },
+  crown: { name: 'Crown', icon: '&#128081;', level: 8 },
+  necklace: { name: 'Necklace', icon: '&#128255;', level: 10 },
+  wings: { name: 'Wings', icon: '&#129419;', level: 14 },
+  glasses: { name: 'Glasses', icon: '&#128083;', level: 18 },
+  wand: { name: 'Wand', icon: '&#129668;', level: 20 },
+  tiara: { name: 'Tiara', icon: '&#128091;', level: 25 },
+  cape: { name: 'Cape', icon: '&#129464;', level: 30 },
+};
+
+let currentDressCategory = 'hair';
+
+function initDressUp() {
+  renderDressUpTabs();
+  renderDressUpItems();
+  updateCharacter();
+}
+
+function renderDressUpTabs() {
+  const container = document.getElementById('dressupTabs');
+  container.innerHTML = '';
+  DRESS_CATEGORIES.forEach(cat => {
+    const tab = document.createElement('button');
+    tab.className = 'category-tab' + (currentDressCategory === cat.id ? ' active' : '');
+    tab.textContent = cat.label;
+    tab.onclick = () => { currentDressCategory = cat.id; renderDressUpTabs(); renderDressUpItems(); };
+    container.appendChild(tab);
+  });
+}
+
+function renderDressUpItems() {
+  const container = document.getElementById('dressupItems');
+  container.innerHTML = '';
+
+  switch (currentDressCategory) {
+    case 'hair':
+      Object.entries(HAIR_STYLES).forEach(([id, style]) => {
+        const cell = document.createElement('div');
+        cell.className = 'item-cell';
+        if (state.hairStyle === id) cell.classList.add('selected');
+        if (state.level < style.level) cell.classList.add('locked');
+        cell.innerHTML = '&#128135;';
+        cell.title = style.name;
+        if (state.level >= style.level) {
+          cell.onclick = () => { state.hairStyle = id; saveState(); renderDressUpItems(); updateCharacter(); };
+        }
+        const label = document.createElement('div');
+        label.style.cssText = 'position:absolute;bottom:2px;font-size:9px;font-weight:600;';
+        label.textContent = style.name;
+        cell.appendChild(label);
+        container.appendChild(cell);
+      });
+      break;
+
+    case 'hair_color':
+      const hairColors = [
+        { color: '#4a2c2a', name: 'Brown', level: 1 },
+        { color: '#1a1a1a', name: 'Black', level: 1 },
+        { color: '#d97706', name: 'Golden', level: 7 },
+        { color: '#dc2626', name: 'Red', level: 12 },
+        { color: '#7c3aed', name: 'Purple', level: 17 },
+        { color: '#ec4899', name: 'Pink', level: 22 },
+        { color: '#06b6d4', name: 'Turquoise', level: 28 },
+      ];
+      hairColors.forEach(hc => {
+        const cell = document.createElement('div');
+        cell.className = 'item-cell';
+        if (state.hairColor === hc.color) cell.classList.add('selected');
+        if (state.level < hc.level) cell.classList.add('locked');
+        cell.innerHTML = '<div class="item-color" style="background:' + hc.color + '"></div>';
+        if (state.level >= hc.level) {
+          cell.onclick = () => { state.hairColor = hc.color; saveState(); renderDressUpItems(); updateCharacter(); };
+        }
+        container.appendChild(cell);
+      });
+      break;
+
+    case 'dress_color':
+      const dressColors = UNLOCKS.filter(u => u.type === 'dress_color');
+      const defaultDress = { id: '#ec4899', name: 'Pink Dress', level: 1 };
+      [defaultDress, ...dressColors].forEach(dc => {
+        const color = dc.id;
+        const cell = document.createElement('div');
+        cell.className = 'item-cell';
+        if (state.dressColor === color) cell.classList.add('selected');
+        if (state.level < dc.level) cell.classList.add('locked');
+        if (color === 'rainbow') {
+          cell.innerHTML = '<div class="item-color" style="background:linear-gradient(135deg,#ef4444,#f97316,#fbbf24,#10b981,#3b82f6,#8b5cf6);"></div>';
+        } else {
+          cell.innerHTML = '<div class="item-color" style="background:' + color + '"></div>';
+        }
+        if (state.level >= dc.level) {
+          cell.onclick = () => { state.dressColor = color; saveState(); renderDressUpItems(); updateCharacter(); };
+        }
+        container.appendChild(cell);
+      });
+      break;
+
+    case 'shoe_color':
+      const shoeColors = [
+        { id: '#6b7280', level: 1 },
+        ...UNLOCKS.filter(u => u.type === 'shoe_color'),
+      ];
+      shoeColors.forEach(sc => {
+        const color = sc.id;
+        const cell = document.createElement('div');
+        cell.className = 'item-cell';
+        if (state.shoeColor === color) cell.classList.add('selected');
+        if (state.level < sc.level) cell.classList.add('locked');
+        cell.innerHTML = '<div class="item-color" style="background:' + color + '"></div>';
+        if (state.level >= sc.level) {
+          cell.onclick = () => { state.shoeColor = color; saveState(); renderDressUpItems(); updateCharacter(); };
+        }
+        container.appendChild(cell);
+      });
+      break;
+
+    case 'accessory':
+      Object.entries(ACCESSORIES).forEach(([id, acc]) => {
+        const cell = document.createElement('div');
+        cell.className = 'item-cell';
+        if (state.accessory === id) cell.classList.add('selected');
+        if (state.level < acc.level) cell.classList.add('locked');
+        cell.innerHTML = acc.icon;
+        if (state.level >= acc.level) {
+          cell.onclick = () => { state.accessory = id; saveState(); renderDressUpItems(); updateCharacter(); };
+        }
+        container.appendChild(cell);
+      });
+      break;
+
+    case 'skin':
+      SKIN_COLORS.forEach(sc => {
+        const cell = document.createElement('div');
+        cell.className = 'item-cell';
+        if (state.skinColor === sc.color) cell.classList.add('selected');
+        cell.innerHTML = '<div class="item-color" style="background:' + sc.color + '"></div>';
+        cell.onclick = () => { state.skinColor = sc.color; saveState(); renderDressUpItems(); updateCharacter(); };
+        container.appendChild(cell);
+      });
+      break;
+  }
+}
+
+function updateCharacter() {
+  const skin = state.skinColor;
+
+  // Skin
+  document.getElementById('head').setAttribute('fill', skin);
+  document.getElementById('leftLeg').setAttribute('fill', skin);
+  document.getElementById('rightLeg').setAttribute('fill', skin);
+  document.getElementById('leftArm').setAttribute('fill', skin);
+  document.getElementById('rightArm').setAttribute('fill', skin);
+  document.querySelectorAll('#faceGroup circle[fill="#FDBCB4"]').forEach(el => el.setAttribute('fill', skin));
+
+  // Neck
+  const neck = document.querySelector('rect[x="93"][y="128"]');
+  if (neck) neck.setAttribute('fill', skin);
+
+  // Blush (slightly darker/pinker)
+  document.querySelectorAll('#faceGroup circle[opacity="0.5"]').forEach(el => el.setAttribute('fill', skin));
+
+  // Dress
+  const dress = document.getElementById('dress');
+  if (state.dressColor === 'rainbow') {
+    dress.setAttribute('fill', 'url(#rainbowGrad)');
+    // Add gradient if not exists
+    let defs = document.querySelector('#characterSvg defs');
+    if (!defs) {
+      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      document.getElementById('characterSvg').insertBefore(defs, document.getElementById('characterSvg').firstChild);
+    }
+    if (!document.getElementById('rainbowGrad')) {
+      defs.innerHTML += '<linearGradient id="rainbowGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ef4444"/><stop offset="20%" stop-color="#f97316"/><stop offset="40%" stop-color="#fbbf24"/><stop offset="60%" stop-color="#10b981"/><stop offset="80%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient>';
+    }
+  } else {
+    dress.setAttribute('fill', state.dressColor);
+  }
+
+  // Shoes
+  document.getElementById('leftShoe').setAttribute('fill', state.shoeColor);
+  document.getElementById('rightShoe').setAttribute('fill', state.shoeColor);
+
+  // Hair
+  const hairFront = document.getElementById('hairFront');
+  const hairBack = document.getElementById('hairBack');
+  const color = state.hairColor;
+
+  hairBack.innerHTML = '';
+
+  switch (state.hairStyle) {
+    case 'default':
+      hairFront.innerHTML = '<path d="M62 95 Q62 55 100 50 Q138 55 138 95 Q135 75 100 72 Q65 75 62 95Z" fill="' + color + '"/>';
+      break;
+    case 'ponytail':
+      hairFront.innerHTML = '<path d="M62 95 Q62 55 100 50 Q138 55 138 95 Q135 75 100 72 Q65 75 62 95Z" fill="' + color + '"/>';
+      hairBack.innerHTML = '<path d="M120 80 Q135 90 130 140 Q128 160 125 170 Q122 160 123 140 Q125 100 115 85Z" fill="' + color + '"/>';
+      break;
+    case 'long':
+      hairFront.innerHTML = '<path d="M62 95 Q62 55 100 50 Q138 55 138 95 Q135 75 100 72 Q65 75 62 95Z" fill="' + color + '"/>';
+      hairBack.innerHTML = '<path d="M62 90 Q55 130 58 180 Q60 200 65 190 Q62 150 65 100Z" fill="' + color + '"/><path d="M138 90 Q145 130 142 180 Q140 200 135 190 Q138 150 135 100Z" fill="' + color + '"/>';
+      break;
+    case 'curly':
+      hairFront.innerHTML = '<path d="M58 100 Q55 55 100 48 Q145 55 142 100 Q138 72 100 68 Q62 72 58 100Z" fill="' + color + '"/>' +
+        '<circle cx="58" cy="95" r="8" fill="' + color + '"/><circle cx="142" cy="95" r="8" fill="' + color + '"/>' +
+        '<circle cx="62" cy="78" r="6" fill="' + color + '"/><circle cx="138" cy="78" r="6" fill="' + color + '"/>';
+      hairBack.innerHTML = '<circle cx="55" cy="110" r="7" fill="' + color + '"/><circle cx="145" cy="110" r="7" fill="' + color + '"/>' +
+        '<circle cx="58" cy="125" r="6" fill="' + color + '"/><circle cx="142" cy="125" r="6" fill="' + color + '"/>';
+      break;
+    case 'pigtails':
+      hairFront.innerHTML = '<path d="M62 95 Q62 55 100 50 Q138 55 138 95 Q135 75 100 72 Q65 75 62 95Z" fill="' + color + '"/>';
+      hairBack.innerHTML = '<path d="M65 80 Q50 85 48 120 Q46 150 52 140 Q50 115 55 90Z" fill="' + color + '"/>' +
+        '<path d="M135 80 Q150 85 152 120 Q154 150 148 140 Q150 115 145 90Z" fill="' + color + '"/>';
+      break;
+    case 'buns':
+      hairFront.innerHTML = '<path d="M62 95 Q62 55 100 50 Q138 55 138 95 Q135 75 100 72 Q65 75 62 95Z" fill="' + color + '"/>';
+      hairBack.innerHTML = '<circle cx="68" cy="62" r="14" fill="' + color + '"/><circle cx="132" cy="62" r="14" fill="' + color + '"/>';
+      break;
+  }
+
+  // Accessories
+  const accGroup = document.getElementById('accessoriesGroup');
+  accGroup.innerHTML = '';
+
+  switch (state.accessory) {
+    case 'bow':
+      accGroup.innerHTML = '<g transform="translate(115,55)"><path d="M0 0 Q10 -12 20 0 Q10 3 0 0Z" fill="#ec4899"/><path d="M0 0 Q-10 -12 -20 0 Q-10 3 0 0Z" fill="#ec4899"/><circle cx="0" cy="0" r="3" fill="#f9a8d4"/></g>';
+      break;
+    case 'crown':
+      accGroup.innerHTML = '<g transform="translate(75,52)"><path d="M0 20 L5 0 L15 12 L25 0 L35 12 L45 0 L50 20Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/><circle cx="10" cy="16" r="2" fill="#ef4444"/><circle cx="25" cy="14" r="2" fill="#3b82f6"/><circle cx="40" cy="16" r="2" fill="#10b981"/></g>';
+      break;
+    case 'necklace':
+      accGroup.innerHTML = '<path d="M82 145 Q100 162 118 145" stroke="#fbbf24" stroke-width="2.5" fill="none"/><circle cx="100" cy="160" r="4" fill="#fbbf24"/><circle cx="100" cy="160" r="2" fill="#ef4444"/>';
+      break;
+    case 'wings':
+      accGroup.innerHTML = '<g opacity="0.6"><path d="M68 170 Q30 140 40 190 Q50 210 68 195Z" fill="#c4b5fd" stroke="#8b5cf6" stroke-width="1"/><path d="M132 170 Q170 140 160 190 Q150 210 132 195Z" fill="#c4b5fd" stroke="#8b5cf6" stroke-width="1"/><path d="M65 180 Q35 160 45 195 Q52 208 65 198Z" fill="#ddd6fe" stroke="#8b5cf6" stroke-width="0.5"/><path d="M135 180 Q165 160 155 195 Q148 208 135 198Z" fill="#ddd6fe" stroke="#8b5cf6" stroke-width="0.5"/></g>';
+      break;
+    case 'glasses':
+      accGroup.innerHTML = '<g><circle cx="86" cy="100" r="11" fill="none" stroke="#f59e0b" stroke-width="2.5"/><circle cx="114" cy="100" r="11" fill="none" stroke="#f59e0b" stroke-width="2.5"/><path d="M97 100 L103 100" stroke="#f59e0b" stroke-width="2"/><path d="M75 98 L62 95" stroke="#f59e0b" stroke-width="2"/><path d="M125 98 L138 95" stroke="#f59e0b" stroke-width="2"/></g>';
+      break;
+    case 'wand':
+      accGroup.innerHTML = '<g transform="translate(140,170) rotate(30)"><rect x="-2" y="0" width="4" height="45" rx="2" fill="#f59e0b"/><polygon points="0,-8 3,-2 8,0 3,2 0,8 -3,2 -8,0 -3,-2" fill="#fbbf24"/><circle cx="0" cy="0" r="3" fill="#fff" opacity="0.8"/></g>';
+      break;
+    case 'tiara':
+      accGroup.innerHTML = '<g transform="translate(75, 57)"><path d="M5 15 Q15 5 25 10 Q25 0 25 10 Q35 5 45 15" stroke="#fbbf24" stroke-width="2" fill="none"/><circle cx="25" cy="5" r="3" fill="#ec4899"/><circle cx="15" cy="10" r="2" fill="#fbbf24"/><circle cx="35" cy="10" r="2" fill="#fbbf24"/></g>';
+      break;
+    case 'cape':
+      accGroup.innerHTML = '<path d="M68 155 Q50 200 55 280 Q100 290 145 280 Q150 200 132 155" fill="#ef4444" opacity="0.7"/><path d="M68 155 Q50 200 55 280 Q100 290 145 280 Q150 200 132 155" fill="none" stroke="#dc2626" stroke-width="1"/>';
+      break;
+  }
+}
+
+// ===== NAIL PAINTING SYSTEM =====
+const NAIL_COLORS_DATA = [
+  { color: '#fce4ec', name: 'Natural', level: 1 },
+  { color: '#ec4899', name: 'Pink', level: 2 },
+  { color: '#ef4444', name: 'Red', level: 3 },
+  { color: '#8b5cf6', name: 'Purple', level: 5 },
+  { color: '#3b82f6', name: 'Blue', level: 7 },
+  { color: '#10b981', name: 'Green', level: 11 },
+  { color: '#f97316', name: 'Orange', level: 13 },
+  { color: '#06b6d4', name: 'Cyan', level: 16 },
+  { color: '#fbbf24', name: 'Gold', level: 19 },
+  { color: '#ffffff', name: 'White', level: 24 },
+  { color: '#1e1b4b', name: 'Midnight', level: 19 },
+];
+
+const NAIL_PATTERNS = [
+  { id: 'none', name: 'None', level: 1, icon: '&#10060;' },
+  { id: 'glitter', name: 'Glitter', level: 9, icon: '&#10024;' },
+  { id: 'hearts', name: 'Hearts', level: 15, icon: '&#128150;' },
+  { id: 'stars', name: 'Stars', level: 20, icon: '&#11088;' },
+  { id: 'rainbow', name: 'Rainbow', level: 25, icon: '&#127752;' },
+];
+
+function initNails() {
+  renderNailColors();
+  renderNailTools();
+  updateNailDisplay();
+}
+
+function renderNailColors() {
+  const container = document.getElementById('colorPalette');
+  container.innerHTML = '';
+  NAIL_COLORS_DATA.forEach(nc => {
+    const swatch = document.createElement('div');
+    swatch.className = 'color-swatch';
+    if (state.selectedNailColor === nc.color) swatch.classList.add('selected');
+    if (state.level < nc.level) swatch.classList.add('locked');
+    swatch.style.background = nc.color;
+    if (nc.color === '#ffffff') swatch.style.border = '3px solid #d1d5db';
+    if (state.level >= nc.level) {
+      swatch.onclick = () => {
+        state.selectedNailColor = nc.color;
+        state.nailTool = 'paint';
+        saveState();
+        renderNailColors();
+        renderNailTools();
+      };
+    }
+    container.appendChild(swatch);
+  });
+}
+
+function renderNailTools() {
+  const container = document.getElementById('nailTools');
+  container.innerHTML = '';
+  NAIL_PATTERNS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'nail-tool-btn';
+    if (state.nailPattern === p.id) btn.classList.add('active');
+    if (state.level < p.level) btn.classList.add('locked');
+    btn.innerHTML = p.icon + ' ' + p.name;
+    if (state.level >= p.level) {
+      btn.onclick = () => {
+        state.nailPattern = p.id;
+        saveState();
+        renderNailTools();
+        updateNailDisplay();
+      };
+    }
+    container.appendChild(btn);
+  });
+}
+
+function paintNail(index) {
+  if (state.nailPattern === 'rainbow') {
+    const rainbowColors = ['#ef4444', '#f97316', '#fbbf24', '#10b981', '#3b82f6'];
+    state.nailColors[index] = rainbowColors[index];
+  } else {
+    state.nailColors[index] = state.selectedNailColor;
+  }
+  saveState();
+  updateNailDisplay();
+
+  // little animation
+  const nail = document.getElementById('nail' + index);
+  nail.style.transform = 'scale(1.2)';
+  setTimeout(() => nail.style.transform = '', 200);
+}
+
+function clearNails() {
+  state.nailColors = ['#fce4ec','#fce4ec','#fce4ec','#fce4ec','#fce4ec'];
+  state.nailPattern = 'none';
+  saveState();
+  updateNailDisplay();
+  renderNailTools();
+}
+
+function updateNailDisplay() {
+  for (let i = 0; i < 5; i++) {
+    const nail = document.getElementById('nail' + i);
+    if (!nail) continue;
+    nail.setAttribute('fill', state.nailColors[i]);
+
+    // Remove existing overlays
+    const existing = nail.parentElement.querySelectorAll('.nail-overlay-' + i);
+    existing.forEach(el => el.remove());
+
+    const cx = parseFloat(nail.getAttribute('cx'));
+    const cy = parseFloat(nail.getAttribute('cy'));
+    const nailTransform = nail.getAttribute('transform') || '';
+
+    if (state.nailPattern === 'glitter' && state.nailColors[i] !== '#fce4ec') {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('nail-overlay-' + i);
+      if (nailTransform) g.setAttribute('transform', nailTransform);
+      for (let j = 0; j < 5; j++) {
+        const sparkle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        sparkle.setAttribute('cx', cx + (Math.random() * 10 - 5));
+        sparkle.setAttribute('cy', cy + (Math.random() * 14 - 7));
+        sparkle.setAttribute('r', '1');
+        sparkle.setAttribute('fill', 'white');
+        sparkle.setAttribute('opacity', '0.7');
+        g.appendChild(sparkle);
+      }
+      nail.parentElement.appendChild(g);
+    }
+
+    if (state.nailPattern === 'hearts' && state.nailColors[i] !== '#fce4ec') {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('nail-overlay-' + i);
+      if (nailTransform) g.setAttribute('transform', nailTransform);
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', cx);
+      t.setAttribute('y', cy + 3);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', '7');
+      t.setAttribute('fill', 'rgba(255,255,255,0.7)');
+      t.textContent = '\u2665';
+      g.appendChild(t);
+      nail.parentElement.appendChild(g);
+    }
+
+    if (state.nailPattern === 'stars' && state.nailColors[i] !== '#fce4ec') {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.classList.add('nail-overlay-' + i);
+      if (nailTransform) g.setAttribute('transform', nailTransform);
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', cx);
+      t.setAttribute('y', cy + 3);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', '7');
+      t.setAttribute('fill', 'rgba(255,255,255,0.8)');
+      t.textContent = '\u2605';
+      g.appendChild(t);
+      nail.parentElement.appendChild(g);
+    }
+  }
+}
+
+// ===== REWARDS SCREEN =====
+function initRewards() {
+  const container = document.getElementById('rewardsList');
+  container.innerHTML = '';
+
+  // Group by level
+  const levels = [...new Set(UNLOCKS.map(u => u.level))].sort((a, b) => a - b);
+
+  levels.forEach(lvl => {
+    const items = UNLOCKS.filter(u => u.level === lvl);
+    const earned = state.level >= lvl;
+
+    const section = document.createElement('div');
+    section.className = 'unlock-item ' + (earned ? 'earned' : 'upcoming');
+    section.innerHTML = '<div class="unlock-icon">' + items.map(i => i.icon).join('') + '</div>' +
+      '<div class="unlock-info"><div class="name">' + items.map(i => i.name).join(', ') + '</div>' +
+      '<div class="desc">' + items.map(i => i.desc).join(' | ') + '</div></div>' +
+      '<div class="unlock-level">' + (earned ? '\u2705' : 'Lvl ' + lvl) + '</div>';
+    container.appendChild(section);
+  });
+}
+
+// ===== LEVEL UP MODAL =====
+function showLevelUp(level, unlocks) {
+  document.getElementById('levelUpNumber').textContent = level;
+  const list = document.getElementById('levelUpUnlocks');
+  if (unlocks.length > 0) {
+    list.innerHTML = '<div style="font-weight:600;margin-bottom:6px;color:var(--text-light);">New unlocks:</div>' +
+      unlocks.map(u => '<div class="unlock-row">' + u.icon + ' <span>' + u.name + '</span></div>').join('');
+  } else {
+    list.innerHTML = '<div style="color:var(--text-light);">Keep going for more rewards!</div>';
+  }
+  document.getElementById('levelUpModal').classList.add('show');
+  spawnConfetti();
+}
+
+function closeLevelUp() {
+  document.getElementById('levelUpModal').classList.remove('show');
+}
+
+// ===== PARTICLES & EFFECTS =====
+function spawnParticles(correct) {
+  const emojis = correct ? ['\u2b50', '\u2728', '\u2764\ufe0f', '\ud83c\udf1f'] : ['\u274c'];
+  for (let i = 0; i < (correct ? 6 : 2); i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      p.style.left = (30 + Math.random() * 40) + 'vw';
+      p.style.top = (20 + Math.random() * 20) + 'vh';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1500);
+    }, i * 100);
+  }
+}
+
+function spawnConfetti() {
+  const colors = ['\ud83c\udf89', '\ud83c\udf8a', '\u2b50', '\u2728', '\ud83c\udf1f', '\u2764\ufe0f', '\ud83e\udde1', '\ud83d\udc9b', '\ud83d\udc9a', '\ud83d\udc99', '\ud83d\udc9c'];
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.textContent = colors[Math.floor(Math.random() * colors.length)];
+      p.style.left = (5 + Math.random() * 90) + 'vw';
+      p.style.top = (5 + Math.random() * 30) + 'vh';
+      p.style.fontSize = (16 + Math.random() * 24) + 'px';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 2000);
+    }, i * 80);
+  }
+}
+
+// ===== KEYBOARD SUPPORT =====
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('screen-math').classList.contains('active')) {
+    if (e.key >= '0' && e.key <= '9') pressNum(parseInt(e.key));
+    if (e.key === 'Backspace') pressDelete();
+    if (e.key === 'Enter') submitAnswer();
+    if (e.key === '-') pressNeg();
+  }
+});
+
+// ===== INIT =====
+loadState();
+updateAllUI();
+updateCharacter();
+</script>
+</body>
+</html>

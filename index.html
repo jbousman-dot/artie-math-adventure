@@ -977,7 +977,29 @@ body {
   </button>
 </nav>
 
-<script>
+<script type="module">
+// ===== FIREBASE =====
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKc_KE67BmDI_Gba8WzVK3cJXocwxaJG0",
+  authDomain: "artie-math-adventure.firebaseapp.com",
+  projectId: "artie-math-adventure",
+  storageBucket: "artie-math-adventure.firebasestorage.app",
+  messagingSenderId: "384118083553",
+  appId: "1:384118083553:web:5d03119e010f2a0d190ca0"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+let firebaseReady = false;
+let currentUserId = null;
+let saveTimeout = null;
+
 // ===== GAME STATE =====
 const DEFAULT_STATE = {
   level: 1,
@@ -1070,6 +1092,14 @@ function xpForLevel(lvl) { return 30 + (lvl - 1) * 15; }
 // ===== SAVE / LOAD =====
 function saveState() {
   localStorage.setItem('artieMathGame', JSON.stringify(state));
+  // Debounced Firestore save
+  if (firebaseReady && currentUserId) {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      const playerRef = doc(db, 'players', currentUserId);
+      setDoc(playerRef, { ...state, lastSaved: Date.now() }, { merge: true }).catch(() => {});
+    }, 1000);
+  }
 }
 
 function loadState() {
@@ -1082,6 +1112,31 @@ function loadState() {
     }
   } else {
     state = { ...DEFAULT_STATE };
+  }
+}
+
+async function loadFromFirestore(userId) {
+  try {
+    const snap = await getDoc(doc(db, 'players', userId));
+    if (snap.exists()) {
+      const remote = snap.data();
+      const local = { ...state };
+      // Use whichever save has more progress (higher level, or same level with more XP/solved)
+      if (remote.level > local.level ||
+         (remote.level === local.level && (remote.xp || 0) > (local.xp || 0)) ||
+         (remote.level === local.level && (remote.xp || 0) === (local.xp || 0) &&
+          (remote.totalSolved || 0) > (local.totalSolved || 0))) {
+        state = { ...DEFAULT_STATE, ...remote };
+        localStorage.setItem('artieMathGame', JSON.stringify(state));
+        updateAllUI();
+        updateCharacter();
+      }
+    } else {
+      // First time with this account - push local state to Firestore
+      saveState();
+    }
+  } catch (e) {
+    // Offline or error - local state is fine
   }
 }
 
@@ -1860,6 +1915,22 @@ document.addEventListener('keydown', (e) => {
 loadState();
 updateAllUI();
 updateCharacter();
+
+// Expose functions for inline onclick handlers (module scope)
+Object.assign(window, {
+  switchScreen, goToMath, pressNum, pressDelete, pressNeg,
+  submitAnswer, paintNail, clearNails, closeLevelUp
+});
+
+// Firebase auth - sign in anonymously, then sync from Firestore
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUserId = user.uid;
+    firebaseReady = true;
+    await loadFromFirestore(user.uid);
+  }
+});
+signInAnonymously(auth).catch(() => {});
 </script>
 </body>
 </html>
